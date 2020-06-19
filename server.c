@@ -1,0 +1,61 @@
+#include <signal.h>
+#include <sys/wait.h>
+#include "msg_queue.h"
+#include "tools.h"
+#include "bank.h"
+
+// 消息列队ID
+int stoc_msgid = 0;
+int ctos_msgid = 0;
+
+// 用于存储子进程ID
+pid_t sub_pid[9] = {};
+
+void sigint(int signum)
+{
+	// 杀死所有子进程
+	for(int i=0; i<9; i++)
+	{
+		printf("正在杀死子进程 %d \n",sub_pid[i]);
+		kill(sub_pid[i],SIGINT);
+		usleep(30000);
+	}
+	
+	// 删除两个消息队列
+	del_msg(stoc_msgid);
+	del_msg(ctos_msgid);
+	
+	// 父进程自杀
+	exit(EXIT_SUCCESS);
+}
+
+int main()
+{
+	// 监控Ctrl+c
+	signal(SIGINT,sigint);
+	
+	// 初始化银行卡号
+	init_bank(BANK_PATH,132400000);
+
+	// 获取两个消息队列
+	stoc_msgid = get_msg(STOC_KEY);
+	ctos_msgid = get_msg(CTOS_KEY);
+	
+	// 加载子进程
+	char *path[] = {"bin/open","bin/login","bin/destroy","bin/unlock","bin/save","bin/take","bin/query","bin/transfer","bin/repass"}	;
+	
+	for(int i=0;i<9;i++)
+	{
+		sub_pid[i] = vfork();
+		if(0 ==sub_pid[i])
+		{
+			execl(path[i],"server",NULL);
+		}
+		printf("创建子进程:%d,%s\n",sub_pid[i],path[i]);	
+		usleep(30000);
+	}
+	
+	// 等待子进程结束，防止它们变成孤儿
+	while(-1 != wait(NULL));
+}
+

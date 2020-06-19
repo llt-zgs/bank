@@ -1,0 +1,31 @@
+#ifndef CLIENT_H
+#define CLIENT_H
+//主菜单
+void main_menu(void);
+//开户
+void open_acc(void);
+// 登录
+void login(void);
+//销户
+void destroy(void);
+//子菜单
+void sub_menu(void);
+//解锁
+void unlock(void);
+//存款
+void save(void);
+//取款
+void take(void);
+//查询
+void query(void);
+//转账
+void transfer(void);
+//修改密码
+void repass(void);
+//发送消息
+void msg_send(void) ;
+//接受消息
+void msg_recv(void) ;
+
+#endif //CLIENT_H
+
